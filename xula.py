@@ -13,6 +13,9 @@ import random
 from jtag import Jtag, islast
 from bitstream import *
 
+# XuLA board chains
+xula_boards = [['XuLA-200', [0x2218093], 'fintf_jtag_xula_200.bit'], ['XuLA2-LX25', [0x4004093], 'fintf_jtag_xula2_lx25.bit']]
+
 # Definitions of commands sent in USB packets.
 
 READ_VERSION_CMD       = 0x00  # Read the product version information.
@@ -207,6 +210,8 @@ class XuLA(Jtag):
         desclen = desc.index(0)
         print '  Description:', bytes(*desc[:desclen])
 
+        self.querychain()
+
     # Sample TDO, output TMS and TDI values, pulse TCK, and return TDO value.
     def tick(self, tms, tdi):
         mask = 0
@@ -289,7 +294,19 @@ class XuLA(Jtag):
         self.go_states(1,1,1,1,1)
         self.go_states(0,1,0,0)
 
-        return [self.do_nbit_cycle(32, 0) for i in range(ndevices)]
+        chain = [self.do_nbit_cycle(32, 0) & 0xFFFFFFF for i in range(ndevices)]
+
+        self.board = None
+
+        for board in xula_boards:
+            if(chain == board[1]):
+                print 'Found {} board'.format(board[0])
+                self.board = board
+                break
+
+        if(self.board == None):
+            print 'Unknown board ({})'.format(''.join(['0x{0:08x} '.format(x) for x in chain])
+)
 
     def progpin(self, v):
         m = bytes(PROG_CMD, v) # + (chr(0) * 30)
@@ -498,7 +515,7 @@ class XuLA(Jtag):
         if doStart and not flashIntfcAlreadyLoaded:
             # configure the FPGA with the Flash interface circuit.
             print "Loading the FPGA with the Flash interface circuit"
-            if not self.configure("fintf_jtag.bit"):
+            if not self.configure(self.board[2]):
                 print "Error downloading Flash interface circuit!!"
                 return False
 	    print
@@ -696,7 +713,7 @@ class XuLA(Jtag):
         if doStart and not flashIntfcAlreadyLoaded:
             # configure the FPGA with the Flash interface circuit.
             print "Loading the FPGA with the Flash interface circuit"
-            if not self.configure("fintf_jtag.bit"):
+            if not self.configure(self.board[2]):
                 print "Error configuring FPGA with Flash programming circuit!"
                 return False
 

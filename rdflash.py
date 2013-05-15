@@ -9,10 +9,6 @@ from bitstream import Bitstream, BitstreamHex, BitFile
 
 def main(bitfilename, loaddr, hiaddr):
     x = XuLA()
-    chain = x.querychain()
-    if chain != [0x02218093]:
-       print "Expected single XC3S200A, but chain is", chain
-    print "OK, found DEVICEID for XC3S200A"
     t = time.time()
     x.read_flash(bitfilename, string.atoi(loaddr, 0), string.atoi(hiaddr, 0), True)
     t = time.time() - t
