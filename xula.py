@@ -14,7 +14,7 @@ from jtag import Jtag, islast
 from bitstream import *
 
 # XuLA board chains
-xula_boards = [['XuLA-200', [0x2218093], 'fintf_jtag_xula_200.bit'], ['XuLA2-LX25', [0x4004093], 'fintf_jtag_xula2_lx25.bit']]
+xula_boards = [['XuLA-200', [0x2218093], 'fintf_jtag_xula_200.bit', ''], ['XuLA2-LX25', [0x4004093], 'fintf_jtag_xula2_lx25.bit', 'ramintfc_jtag_xula2_lx25.bit']]
 
 # Definitions of commands sent in USB packets.
 
@@ -838,7 +838,27 @@ class XuLA(Jtag):
         return r
     
     def memquery(self, id):
-        return self.hostio(id, Bitstream(2, int("01", 2)), 16, recv = True)
+        if not self.configure(self.board[3]):
+            print "Error configuring FPGA with Flash programming circuit!"
+            return False
+
+        if self.state() != "Shift-IR":
+            self.rti()
+            self.go_states(1,1,0,0)
+        self.assert_state("Shift-IR")
+
+        self.sendbs(self.USER1)
+
+        self.go_states(1,1,0,0)
+        self.assert_state("Shift-DR")
+
+        self.do_nbit_cycle(8,id)
+        self.do_nbit_cycle(1,0)
+        data = self.sendrecvbs(Bitstream(24,0))
+
+        self.rti()
+
+        return [(data & 0xFF0000) >> 16, (data & 0xFF00) >> 8, data & 0xFF]
 
     def memread(self, id, addr, ndata):
         return self.hostio(id, Bitstream(34, 0x300000000 + addr), ndata, recv = True)
