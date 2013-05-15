@@ -10,10 +10,6 @@ from bitstream import Bitstream, BitstreamHex, BitFile
 
 def main(bitfilename):
     x = XuLA()
-    chain = x.querychain()
-    if chain != [0x02218093]:
-       print "Expected single XC3S200A, but chain is", chain
-    print "OK, found DEVICEID for XC3S200A"
     t = time.time()
     x.progpin(1)
     x.progpin(0)
