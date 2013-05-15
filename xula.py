@@ -291,6 +291,9 @@ class XuLA(Jtag):
         else:
             ndevices = 1
 
+        # Go to Test-Logic-Reset state
+        # In TLR state, IDCODE is automatically loaded
+
         self.go_states(1,1,1,1,1)
         self.go_states(0,1,0,0)
 
