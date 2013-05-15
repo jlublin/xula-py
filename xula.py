@@ -233,7 +233,8 @@ class XuLA(Jtag):
         # print "(Bulk %d)" % len(m), ["%02x" % ord(c) for c in m[:50]]
         # print ["%02x" % ord(x) for x in m]
 
-        self.handle.bulkWrite(usb.ENDPOINT_OUT + 1, m, 1000)
+		# Timeout 5 sec, ~2 needed for loading bitstream into XuLA2
+        self.handle.bulkWrite(usb.ENDPOINT_OUT + 1, m, 1000*5)
         self.debug_tms(1)
         if self.verbose:
             print "took", elapsed(time.time() - t)
