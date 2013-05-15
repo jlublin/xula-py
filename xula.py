@@ -858,6 +858,9 @@ class XuLA(Jtag):
 
         self.rti()
 
+        # [ Internal RAM buffer address width,
+        #   Memory address width (host-side),
+        #   Memory data width ]
         return [(data & 0xFF0000) >> 16, (data & 0xFF00) >> 8, data & 0xFF]
 
     def memread(self, id, addr, ndata):
