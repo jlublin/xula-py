@@ -468,8 +468,26 @@ class XuLA(Jtag):
         self.go_state(0)
         self.assert_state("Run-Test/Idle")
         return True
-
     # Added -- HP
+
+
+    def read_capabilities(self):
+        # download the USER instruction to the FPGA to enable the JTAG circuitry
+        self.initTAP()
+        self.assert_state("Shift-IR")
+        self.sendbs(self.USER1)
+        # go to the SHIFT-DR state where the Flash interface circuitry can be controlled
+        self.go_states(1,1,0,0)  # -> UpdateIR -> SelectDRScan -> CaptureDR -> ShiftDR
+        self.assert_state("Shift-DR")
+        # download the instruction that gets the interface capabilities from the FPGA
+        self.sendbs(INSTR_CAPABILITIES)
+        # readback the capabilities of the interface
+        self.go_states(0,1,0)    # -> PauseDR -> Exit2DR -> ShiftDR
+        self.assert_state("Shift-DR")
+        capabilities = self.sendrecvbs(Bitstream(TDO_LENGTH, 0))
+
+        return capabilities
+
 
     # check if the configuration supports a given capability.
     def has_capability(self, caps, bit_index):
